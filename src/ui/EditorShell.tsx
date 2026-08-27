@@ -20,7 +20,9 @@ export default function EditorShell() {
       imageCode: '',
       fillColor: '#a7f3d0',
       strokeColor: '#059669',
-      levels: 3,
+      // levels fixed to 5 for Lingonaut
+      levels: 5 as const,
+      lessonsPerLevel: 3,
       words: [],
       sentences: [],
       audiobank: [],
@@ -45,7 +47,7 @@ export default function EditorShell() {
           {course.skills.map(s => (
             <div key={s.id} className={`p-2 rounded cursor-pointer ${selectedSkillId===s.id ? 'bg-green-100': ''}`} onClick={() => setSelectedSkillId(s.id)}>
               <div className="font-medium">{s.name}</div>
-              <div className="text-xs text-gray-500">levels: {s.levels} • words: {s.words.length}</div>
+              <div className="text-xs text-gray-500">lessons/level: {s.lessonsPerLevel} • levels: {s.levels} • words: {s.words.length}</div>
             </div>
           ))}
         </div>

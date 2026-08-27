@@ -1,5 +1,5 @@
 export type AudiobankEntry = {
-  id: string // original filename or generated id
+  id: string // unique id used to reference audio (we'll use item ids to keep them readable)
   file: File | Blob
 }
 
@@ -37,7 +37,10 @@ export type Skill = {
   imageCode?: string
   fillColor?: string
   strokeColor?: string
-  levels: number
+  // number of levels is fixed to 5 for Lingonaut courses
+  levels: 5
+  // lessonsPerLevel indicates how many lessons each of the 5 levels will contain
+  lessonsPerLevel: number
   words: Word[]
   sentences: Sentence[]
   audiobank: AudiobankEntry[]

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { Skill, Word, Sentence, AutomationLevelConfig } from '../types'
+import { Skill, Word, Sentence, AutomationLevelConfig, AudiobankEntry } from '../types'
 import { generateId } from '../utils/id'
-import { encodeMp3FromBlob } from '../utils/mp3encoder'
 
 type Props = {
   skill: Skill
@@ -18,20 +17,30 @@ export default function SkillEditor({ skill, onChange }: Props) {
   }
 
   function addWord() {
-    const w: Word = { id: generateId(8), target: '新词', native: 'translation' }
+    const w: Word = { id: generateId(8), target: 'new', native: 'translation' }
     update(s => s.words.push(w))
   }
   function addSentence() {
-    const se: Sentence = { id: generateId(8), target: '这是句子。', native: 'This is a sentence.' }
+    const se: Sentence = { id: generateId(8), target: 'New sentence.', native: 'Translation.' }
     update(s => s.sentences.push(se))
   }
 
-  async function onAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    const file = files[0]
-    const entry = { id: generateId(10), file }
-    update(s => s.audiobank.push(entry))
+  async function uploadAudioForItem(itemId: string, file: File | null) {
+    if (!file) return
+    // use itemId as the audiobank id so it's easy to see which audio belongs to which item
+    const entry: AudiobankEntry = { id: itemId, file }
+    update(s => {
+      // replace existing entry with same id if present
+      const i = s.audiobank.findIndex(a => a.id === itemId)
+      if (i >= 0) s.audiobank[i] = entry
+      else s.audiobank.push(entry)
+
+      // attach to word if exists
+      const w = s.words.find(w => w.id === itemId)
+      if (w) w.audioId = itemId
+      const se = s.sentences.find(se => se.id === itemId)
+      if (se) se.audioId = itemId
+    })
   }
 
   function attachAudioToWord(wordId: string, audioId: string) {
@@ -69,9 +78,14 @@ export default function SkillEditor({ skill, onChange }: Props) {
           <label className="block mb-2">Description
             <textarea className="block border p-1 w-full" value={skill.description || ''} onChange={e => update(s => s.description = e.target.value)} />
           </label>
-          <label className="block mb-2">Levels
-            <input type="number" className="border p-1 w-24" value={skill.levels} onChange={e => update(s => s.levels = Math.max(1, Number(e.target.value)))} />
-          </label>
+          <div className="flex items-center gap-4">
+            <label className="block mb-2">Levels (fixed)
+              <input className="block border p-1 w-24 bg-gray-100" value={5} readOnly />
+            </label>
+            <label className="block mb-2">Lessons per level
+              <input type="number" className="border p-1 w-24" value={skill.lessonsPerLevel} onChange={e => update(s => s.lessonsPerLevel = Math.max(1, Number(e.target.value)))} />
+            </label>
+          </div>
         </div>
       )}
 
@@ -79,7 +93,6 @@ export default function SkillEditor({ skill, onChange }: Props) {
         <div className="bg-white p-3 rounded">
           <div className="flex items-center mb-2">
             <button className="px-2 py-1 bg-green-600 text-white rounded" onClick={addWord}>Add word</button>
-            <input className="ml-4" type="file" accept="audio/*" onChange={onAudioUpload} />
           </div>
           <div>
             {skill.words.map(w => (
@@ -88,8 +101,11 @@ export default function SkillEditor({ skill, onChange }: Props) {
                   <input value={w.target} onChange={e => update(s => { const x = s.words.find(z=>z.id===w.id)!; x.target = e.target.value })} className="border p-1 flex-1" />
                   <input value={w.native} onChange={e => update(s => { const x = s.words.find(z=>z.id===w.id)!; x.native = e.target.value })} className="border p-1 w-64" />
                 </div>
-                <div className="mt-2">
-                  <label className="text-sm text-gray-600">Attach audio:</label>
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Upload audio for this word:</label>
+                  <input type="file" accept="audio/*" onChange={e => uploadAudioForItem(w.id, e.target.files ? e.target.files[0] : null)} />
+
+                  <label className="text-sm text-gray-600 ml-4">Or attach existing:</label>
                   <select value={w.audioId || ''} onChange={e => attachAudioToWord(w.id, e.target.value)} className="ml-2 border p-1">
                     <option value="">(none)</option>
                     {skill.audiobank.map(a => <option key={a.id} value={a.id}>{a.id}</option>)}
@@ -105,7 +121,6 @@ export default function SkillEditor({ skill, onChange }: Props) {
         <div className="bg-white p-3 rounded">
           <div className="flex items-center mb-2">
             <button className="px-2 py-1 bg-green-600 text-white rounded" onClick={addSentence}>Add sentence</button>
-            <input className="ml-4" type="file" accept="audio/*" onChange={onAudioUpload} />
           </div>
           <div>
             {skill.sentences.map(se => (
@@ -114,8 +129,11 @@ export default function SkillEditor({ skill, onChange }: Props) {
                   <input value={se.target} onChange={e => update(s => { const x = s.sentences.find(z=>z.id===se.id)!; x.target = e.target.value })} className="border p-1 flex-1" />
                   <input value={se.native} onChange={e => update(s => { const x = s.sentences.find(z=>z.id===se.id)!; x.native = e.target.value })} className="border p-1 w-64" />
                 </div>
-                <div className="mt-2">
-                  <label className="text-sm text-gray-600">Attach audio:</label>
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Upload audio for this sentence:</label>
+                  <input type="file" accept="audio/*" onChange={e => uploadAudioForItem(se.id, e.target.files ? e.target.files[0] : null)} />
+
+                  <label className="text-sm text-gray-600 ml-4">Or attach existing:</label>
                   <select value={se.audioId || ''} onChange={e => attachAudioToSentence(se.id, e.target.value)} className="ml-2 border p-1">
                     <option value="">(none)</option>
                     {skill.audiobank.map(a => <option key={a.id} value={a.id}>{a.id}</option>)}
@@ -131,8 +149,7 @@ export default function SkillEditor({ skill, onChange }: Props) {
         <div className="bg-white p-3 rounded">
           <div className="space-y-3">
             <div className="text-sm text-gray-600">Define how many questions of each type to include per level. Empty or 0 = none.</div>
-            {[...Array(Math.max(1, skill.levels)).keys()].map(i => {
-              const level = i+1
+            {[1,2,3,4,5].map((level) => {
               const cfg = skill.automation[level] || {}
               return (
                 <div key={level} className="border p-2 rounded">
