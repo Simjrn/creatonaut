@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import EditorShell from './ui/EditorShell'
+import EditorShell from './EditorShell'
+import React from 'react'
 
 export default function AppEditor() {
   return (
