@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import Editor from './ui/Editor'
+import AppEditor from './ui/AppEditor'
+import React from 'react'
 
 export default function App() {
   return (
@@ -8,7 +8,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto">Creatonaut — Lingonaut course authoring (PWA)</div>
       </header>
       <main className="max-w-6xl mx-auto p-4">
-        <Editor />
+        <AppEditor />
       </main>
     </div>
   )
