@@ -1,0 +1,9 @@
+{
+  "short_name": "Creatonaut",
+  "name": "Creatonaut — Lingonaut authoring PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Create Lingonaut .cn3 course packages locally in your browser",
+  "icons": []
+}
